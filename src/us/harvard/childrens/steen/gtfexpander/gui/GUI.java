@@ -11,6 +11,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -20,7 +21,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
+import us.harvard.childrens.steen.gtfexpander.worker.ExpansionType;
 import us.harvard.childrens.steen.gtfexpander.worker.GTFexpander;
+import javax.swing.JComboBox;
 
 public class GUI extends JFrame implements ItemListener, ActionListener {
 
@@ -64,13 +67,13 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 		
 		frmGtfExpander = new JFrame();
 		frmGtfExpander.setTitle("GTF Expander");
-		frmGtfExpander.setBounds(100, 100, 450, 198);
+		frmGtfExpander.setBounds(100, 100, 450, 240);
 		frmGtfExpander.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] {0, 0, 0};
-		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		frmGtfExpander.getContentPane().setLayout(gridBagLayout);
 		
 		JLabel lblNewLabel_2 = new JLabel("Add gene and transcript lines (required for PoGo)");
@@ -78,7 +81,7 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
 		gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
 		gbc_lblNewLabel_2.gridwidth = 2;
-		gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 0);
 		gbc_lblNewLabel_2.gridx = 0;
 		gbc_lblNewLabel_2.gridy = 0;
 		frmGtfExpander.getContentPane().add(lblNewLabel_2, gbc_lblNewLabel_2);
@@ -111,6 +114,7 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 					textField_1.setText(file.getAbsolutePath());
 					String pathname = file.getAbsolutePath();
 					String newname = pathname.replace(".gtf", "_exp.gtf");
+					newname = pathname.replace(".gff", "_exp.gtf");
 					textField.setText(newname);
 				}
 			}
@@ -138,6 +142,24 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 		gbc_textField.gridy = 4;
 		frmGtfExpander.getContentPane().add(textField, gbc_textField);
 		textField.setColumns(10);
+		
+		JLabel lblInputfileType = new JLabel("Inputfile Type");
+		GridBagConstraints gbc_lblInputfileType = new GridBagConstraints();
+		gbc_lblInputfileType.anchor = GridBagConstraints.WEST;
+		gbc_lblInputfileType.insets = new Insets(0, 0, 5, 5);
+		gbc_lblInputfileType.gridx = 0;
+		gbc_lblInputfileType.gridy = 5;
+		frmGtfExpander.getContentPane().add(lblInputfileType, gbc_lblInputfileType);
+		
+		JComboBox comboBox = new JComboBox();
+		comboBox.setModel(new DefaultComboBoxModel<>(ExpansionType.values()));
+		
+		GridBagConstraints gbc_comboBox = new GridBagConstraints();
+		gbc_comboBox.insets = new Insets(0, 0, 5, 5);
+		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBox.gridx = 0;
+		gbc_comboBox.gridy = 6;
+		frmGtfExpander.getContentPane().add(comboBox, gbc_comboBox);
 		
 		JButton btnNewButton_1 = new JButton("Select");
 		btnNewButton_1.setFont(new Font("Tahoma", Font.BOLD, 11));
@@ -174,6 +196,7 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 				mapping.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 				mapping.setModal(true);
 				
+				ExpansionType type = (ExpansionType)comboBox.getSelectedItem();
 				
 				class Worker extends SwingWorker<Void,Void> {
 					private String input;
@@ -187,9 +210,9 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 					@Override
 					protected Void doInBackground() {
 						
-						int exitcode = GTFexpander.expand(input, output);
+						int exitcode = GTFexpander.expand(input, output, type);
 						if(exitcode!=0) {
-							JOptionPane.showMessageDialog(GUI.this, "GTF Expander terminated unexpectedly.\nPlease check input files and restart.", "GTF Expander Execution Error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(GUI.this, "GTF Expander terminated unexpectedly.\nPlease check input files and option settings and restart.", "GTF Expander Execution Error", JOptionPane.ERROR_MESSAGE);
 						}
 						
 						return null;
@@ -213,12 +236,13 @@ public class GUI extends JFrame implements ItemListener, ActionListener {
 				btnNewButton.setEnabled(true);
 			}
 		});
+		
 		btnNewButton_2.setFont(new Font("Tahoma", Font.BOLD, 13));
 		GridBagConstraints gbc_btnNewButton_2 = new GridBagConstraints();
 		gbc_btnNewButton_2.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnNewButton_2.gridwidth = 2;
 		gbc_btnNewButton_2.gridx = 0;
-		gbc_btnNewButton_2.gridy = 5;
+		gbc_btnNewButton_2.gridy = 7;
 		frmGtfExpander.getContentPane().add(btnNewButton_2, gbc_btnNewButton_2);
 	}
 
